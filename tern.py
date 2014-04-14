@@ -10,6 +10,21 @@ is_st2 = int(sublime.version()) < 3000
 def is_js_file(view):
   return view.score_selector(sel_end(view.sel()[0]), "source.js") > 0
 
+def is_coffee_file(view):
+  return view.score_selector(sel_end(view.sel()[0]), "source.coffee") > 0
+
+def get_region(view):
+
+  if is_coffee_file(view):
+
+    aRegion = view.find_by_selector("source.coffee")
+
+  else:
+
+    aRegion = view.find_by_selector("source.js")
+
+  return aRegion
+
 files = {}
 arghints_enabled = False
 tern_command = None
@@ -81,7 +96,7 @@ class Project(object):
 
 
 def get_pfile(view):
-  if not is_js_file(view): return None
+  if not is_js_file(view) and not is_coffee_file(view): return None
   fname = view.file_name()
   if fname is None: return None
   if fname in files: return files[fname]
@@ -183,7 +198,8 @@ def relative_file(pfile):
 
 def buffer_fragment(view, pos):
   region = None
-  for js_region in view.find_by_selector("source.js"):
+
+  for js_region in get_region(view):
     if js_region.a <= pos and js_region.b >= pos:
       region = js_region
       break
@@ -251,7 +267,7 @@ else:
 
 def view_js_text(view):
   text, pos = ("", 0)
-  for region in view.find_by_selector("source.js"):
+  for region in get_region(view):
     if region.a > pos: text += ";" + " " * (region.a - pos - 1)
     text += view.substr(region)
     pos = region.b
